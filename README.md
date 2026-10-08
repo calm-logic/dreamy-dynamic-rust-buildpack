@@ -45,7 +45,9 @@ updates**.
 | Key | Meaning |
 | --- | --- |
 | `name`, `label`, `description` | How the buildpack is named and shown. The name must be unique in a workspace. |
-| `layout` | `dynamic-rust`: Dreamy generates the host around the project's own layers. `files`: the files are the source as the agent wrote them. |
+| `scaffold` | How Dreamy turns the project's stored files into its repository. `blueprint` and `lock` name where the blueprint and the library pins live; `map` moves stored path prefixes into the repository (`models/` → `backend/src/models/`); `vars` are `[name, expression]` pairs; `files` lists generated files in order, each `copy` (with optional `replace`), `template` (Jinja-style, rendered with `project`, `revision`, `blueprint`, `lock`, `manifest` and the vars) or `json` (an expression written as pretty JSON), optionally only `when` an expression holds; `indexes` rebuild a module index per directory from its files unless the project wrote one. Without a scaffold the stored files are the repository. |
+| `blueprint_rules` | What a blueprint holds: exactly these `keys`, these `lists`, the values each `config` key may take, and names each list may not use (`reserved`). |
+| `layout` | Kept for Dreamy versions before `scaffold`; ignored by current ones. |
 | `lock` | The file pinning the libraries new revisions build on. |
 | `guide`, `skill` | The agent guide and the buildpack's part of the worker skill. |
 | `layers`, `core_models`, `blueprint` | The blueprint's shape and a new project's blueprint. |

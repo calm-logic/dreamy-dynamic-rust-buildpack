@@ -147,6 +147,20 @@
     "skill": "app-data.md",
     "prefix": "/api/admin/"
   },
+  "app": {
+    "session": {
+      "path": "/api/operator/session",
+      "cookie": "dream_app"
+    },
+    "providers": {
+      "list": "/api/admin/providers/?per_page=200",
+      "items": "providers",
+      "record": "/api/admin/providers/{id}/",
+      "connect": "/api/admin/providers/{id}/actions/connect/",
+      "disconnect": "/api/admin/providers/{id}/actions/disconnect/",
+      "code": "app/provider.rs.j2"
+    }
+  },
   "capabilities": {
     "providers": true,
     "app_data": true,

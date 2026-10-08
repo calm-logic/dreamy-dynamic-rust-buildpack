@@ -39,6 +39,8 @@ updates**.
 | `app-data.md` | The skill for reading and changing data in a deployed app; `{command}` is replaced with the task's own command. |
 | `foundation.lock.json` | The `dynamic-rust` and `dynamic-rust-admin` revisions new revisions build on. |
 | `project/` | Templates for the files Dreamy generates around a project's own layers: README, Rust entry points, CI, and the admin UI's preparation script and configuration. |
+| `scaffold/` | Templates the `scaffold` section renders: the backend crate, the frontend README, `.gitignore` and the buildpack refresh tool. |
+| `app/provider.rs.j2` | The `registry.integration(...)` code a dynamic-rust app registers a workspace provider with. |
 
 ## Manifest
 
@@ -61,7 +63,8 @@ updates**.
 | `review` | Paths and code patterns that always get a full review. |
 | `reference` | The library whose public API is summarized for agents, its language, and the files that define that API. |
 | `app_data` | The skill for reading and changing the deployed app's data, and the API path prefix it allows. |
-| `capabilities` | `providers` (workspace providers are written into its apps), `app_data`, and `release` (Dreamy builds and deploys it). |
+| `app` | How Dreamy talks to a deployed app. `session`: the path where the app exchanges Dreamy's signed operator grant for a session, and the cookie that carries it. `providers`: the app's providers API that Dreamy writes workspace providers through (`list` and the `items` key holding its records; `record`, `connect` and `disconnect`, where `{id}` names a record), and `code`, the template for the registration an app's code makes for a provider. |
+| `capabilities` | `providers` (workspace providers are written into its apps), `app_data`, and `release` (Dreamy builds and deploys it). `providers` and `app_data` stay off without the `app` declarations they need. |
 | `release` | The builder, deployment template and release checks. For now these name Dreamy's built-in dynamic-rust pipeline; they are moving into this repository. |
 | `prompts` | The worker's `start` (`{guide_url}` marks the guide), `sources` (`{sources}` marks the checkouts) and `rules` lines, and the verifier's lines. |
 

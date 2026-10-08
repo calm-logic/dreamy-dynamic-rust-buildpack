@@ -1,0 +1,27 @@
+registry.integration(
+    Integration::{{ "token" if provider.auth == "token" else "oauth2" }}({{ provider.integration | quote }}, {{ provider.name | quote }})
+        .describe({{ provider.summary | quote }})
+{%- if provider.auth == "token" %}
+{%- if provider.token_header != "Authorization" or provider.token_format != "Bearer {token}" %}
+        .token_header({{ provider.token_header | quote }}, {{ provider.token_format | quote }})
+{%- endif %}
+{%- if provider.check %}
+        .check({{ provider.check | quote }})
+{%- endif %}
+{%- else %}
+        .authorize_url({{ provider.authorize_url | quote }})
+        .token_url({{ provider.token_url | quote }})
+{%- if provider.scopes %}
+        .scopes(&[{% for scope in provider.scopes %}{{ scope | quote }}{% if not loop.last %}, {% endif %}{% endfor %}])
+{%- endif %}
+{%- if provider.account_params %}
+        .account_params(&[{% for param in provider.account_params %}{{ param | quote }}{% if not loop.last %}, {% endif %}{% endfor %}])
+{%- endif %}
+{%- for key, value in provider.authorize_params %}
+        .authorize_param({{ key | quote }}, {{ value | quote }})
+{%- endfor %}
+{%- if provider.client_secret_in_body %}
+        .client_secret_in_body()
+{%- endif %}
+{%- endif %},
+)?;

@@ -1,0 +1,98 @@
+{
+  "name": "dynamic-rust",
+  "label": "Dynamic Rust",
+  "description": "A Rust application on the shared dynamic-rust framework with the dynamic-rust-admin UI, PostgreSQL, and serverless hosting with development and production environments.",
+  "layout": "dynamic-rust",
+  "lock": "foundation.lock.json",
+  "guide": "guide.md",
+  "skill": "skill.md",
+  "layers": ["models", "hooks", "tasks", "roles", "config"],
+  "core_models": ["User", "Identity", "IdentityVerification", "Role", "Dashboard", "View", "Provider"],
+  "blueprint": {
+    "models": [],
+    "hooks": [],
+    "tasks": [],
+    "roles": [],
+    "config": {
+      "url": null,
+      "brand": "dreamy",
+      "admin": "dynamic-rust-admin",
+      "api": "dynamic-rust",
+      "database": "postgres",
+      "database_strategy": "shared_instance_logical_database",
+      "compute": "lambda",
+      "environments": ["dev", "production"]
+    }
+  },
+  "max_files": 100,
+  "editable": {
+    "include": [
+      "backend/project.json",
+      "backend/src/models/",
+      "backend/src/hooks/",
+      "backend/src/tasks/",
+      "backend/src/roles/",
+      "backend/tests/",
+      "frontend/overrides/",
+      "config/"
+    ],
+    "exclude": ["config/environments.json"],
+    "summary": "backend/project.json, backend/src/models/, backend/src/hooks/, backend/src/tasks/, backend/src/roles/, backend/tests/, frontend/overrides/, and config/ (except config/environments.json)",
+    "required": ["backend/project.json"]
+  },
+  "source_roots": ["backend", "frontend", "config"],
+  "ignored": ["target", "node_modules", "dist", ".work", ".foundation"],
+  "tests": {
+    "default": ["cargo test --manifest-path backend/Cargo.toml -- --include-ignored"],
+    "when": "backend/Cargo.toml",
+    "database_env": "DREAM_TEST_DATABASE_URL"
+  },
+  "toolchain": {
+    "env": ["CARGO_HOME", "RUSTUP_HOME", "CARGO_TARGET_DIR", "RUST_BACKTRACE"],
+    "readonly_home": [".rustup"],
+    "writable": [{"env": "CARGO_HOME", "home": ".cargo"}],
+    "executables": ["cargo"]
+  },
+  "sources": {"lock_file": "foundation.lock.json", "cache": ".foundation"},
+  "refresh": {"action": "upgrade_foundation", "title": "Update buildpack files", "pins": "foundation.lock.json"},
+  "review": {
+    "paths": ["backend/src/roles/", "backend/src/hooks/", "backend/src/tasks/", "backend/project.json", "config/e2e.json"],
+    "code": ["\\.grant\\(", "\\.scoped\\(", "\\bmigration\\(", "\\bschedule\\(", "Integration::", "\"authenticated\"", "\"\\*\"", "superuser"]
+  },
+  "reference": {
+    "library": "dynamic-rust",
+    "language": "rust",
+    "files": [
+      "src/application/extensions.rs",
+      "src/application/extension_api.rs",
+      "src/application/integrations.rs",
+      "src/application/task_runner.rs",
+      "src/application/core.rs",
+      "src/application/mod.rs",
+      "src/resource.rs",
+      "src/query.rs"
+    ]
+  },
+  "app_data": {"skill": "app-data.md", "prefix": "/api/admin/"},
+  "capabilities": {"providers": true, "app_data": true, "release": true},
+  "release": {
+    "builder": "tools/build_project.py",
+    "template": "infra/generated-app.yaml",
+    "checks": ["tests/generated-app.cjs", "tests/app-scenarios.cjs", "tests/app-tests.cjs"]
+  },
+  "prompts": {
+    "worker": {
+      "start": "Read README.md and backend/project.json first. The framework guide is at {guide_url}; read it before adding models, hooks, tasks, or roles.",
+      "sources": "The framework sources this project pins are checked out read-only at {sources}. Read them there whenever you need to know how the framework or the admin UI behaves; do not fetch them from the network or search elsewhere.",
+      "rules": [
+        "Give every model field a label and a one-sentence description: .label(\"due_date\", \"Due date\") and .describe(\"due_date\", \"When the loan must be returned.\"). They are the column heading and the help text a user of the deployed app sees, and the only explanation they get, so write them for that person.",
+        "Access: roles exist as grants in code and as records in the deployed app's Roles resource (a name and a permissions map per resource and operation); users hold role records by id in their roles field, plus the implicit \"authenticated\". The Dreamy project owners are superusers in every deployed environment. Keep grants locked down to the app's own roles (no \"authenticated\" or \"*\" grants unless asked) and state in the reply which roles exist and what each may do.",
+        "Every outside service (Asaak API, QuickBooks, Uber, Stripe, SendGrid, any API) is a provider: register it as an integration as the framework guide's \"Outside services are providers\" section shows, and never put tokens, keys or client secrets in code, config, tests or the reply. Its credentials are injected by Dreamy or entered by an administrator on the app's Providers page, so never ask how a service signs in or for its credentials; build the integration from what you know of its public API. When companies, entities or people each need their own account with a service, connect it per record as the guide's \"One connection per company, entity or person\" shows. Keep links to Users, Roles and Providers in any navigation you draw."
+      ]
+    },
+    "verifier": [
+      "Also check access: grants should name the app's own roles and not open models to \"authenticated\" or \"*\" unless the request asked for that; project owners are superusers regardless.",
+      "Outside services must be registered integrations (providers) with no credentials in code, config or tests, and a workspace provider must be registered with the code the workspace gives; a reply that asks the user how a service signs in or for its credentials, instead of building the provider, is not acceptable."
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+name: App source checks
+on: [push, pull_request]
+permissions: {contents: read}
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    # Database tests run against a fresh PostgreSQL server, as in Dreamy's release builder.
+    services:
+      postgres:
+        image: postgres:16
+        env: {POSTGRES_PASSWORD: postgres}
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 20
+    env:
+      DREAM_TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Check backend extensions against the official Rust library
+        run: |
+          rustup toolchain install 1.88.0 --profile minimal
+          cargo +1.88.0 test --manifest-path backend/Cargo.toml -- --include-ignored
+      - name: Build the pinned official admin library with project overrides
+        run: |
+          python3 frontend/scripts/prepare.py
+          cd frontend/.work/admin
+          yarn install --frozen-lockfile
+          node node_modules/@quasar/app/bin/quasar build
+# Releases run through Dreamy's API and trusted dev/E2E/production gates.
+# Project-authored workflows receive no deployment credentials.

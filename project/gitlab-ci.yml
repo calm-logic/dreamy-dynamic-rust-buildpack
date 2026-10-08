@@ -1,0 +1,13 @@
+# Configure these variables in GitLab to an existing, reviewed platform pipeline:
+# DREAM_PLATFORM_CI_PROJECT, DREAM_PLATFORM_CI_REF (immutable commit SHA).
+# The shared pipeline owns packaging the backend runtime and frontend wrapper,
+# then tests -> dev -> E2E on dev -> production. It also reports release evidence.
+include:
+  - project: '$DREAM_PLATFORM_CI_PROJECT'
+    ref: '$DREAM_PLATFORM_CI_REF'
+    file: '/dream-app.yml'
+variables:
+  DREAM_BACKEND_PATH: backend
+  DREAM_FRONTEND_PATH: frontend
+  DREAM_PROJECT_SPEC: backend/project.json
+  DREAM_ENVIRONMENTS: dev,production

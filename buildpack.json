@@ -205,11 +205,11 @@
       {"path": "branding.js", "template": "release/branding.js", "type": "application/javascript"}
     ],
     "template": "infra/generated-app.yaml",
-    "checks": [
-      "tests/generated-app.cjs",
-      "tests/app-scenarios.cjs",
-      "tests/app-tests.cjs"
-    ]
+    "checks": {
+      "e2e": ["node", "{buildpack}/release/e2e/generated-app.cjs"],
+      "plan": ["node", "{buildpack}/release/e2e/app-tests.cjs", "plan"],
+      "config": "config/e2e.json"
+    }
   },
   "prompts": {
     "worker": {

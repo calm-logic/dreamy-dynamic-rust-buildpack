@@ -42,6 +42,7 @@ updates**.
 | `scaffold/` | Templates the `scaffold` section renders: the backend crate, the frontend README, `.gitignore` and the buildpack refresh tool. |
 | `app/provider.rs.j2` | The `registry.integration(...)` code a dynamic-rust app registers a workspace provider with. |
 | `release/app-config.js`, `release/branding.js`, `release/branding.json` | The admin UI's configuration and branding, rendered into the deployed UI. |
+| `release/e2e/` | The release checks: `generated-app.cjs` signs in through the release inbox and drives the admin, `app-tests.cjs` plans them, `app-scenarios.cjs` runs the project's scenarios. |
 | `release/build.py` | The release build: `setup` installs musl, Rust and yarn; `build` runs the project's tests, compiles the static `app` binary and builds the admin UI. |
 
 ## Manifest
@@ -67,7 +68,7 @@ updates**.
 | `app_data` | The skill for reading and changing the deployed app's data, and the API path prefix it allows. |
 | `app` | How Dreamy talks to a deployed app. `session`: the path where the app exchanges Dreamy's signed operator grant for a session, and the cookie that carries it. `providers`: the app's providers API that Dreamy writes workspace providers through (`list` and the `items` key holding its records; `record`, `connect` and `disconnect`, where `{id}` names a record), and `code`, the template for the registration an app's code makes for a provider. |
 | `capabilities` | `providers` (workspace providers are written into its apps), `app_data`, and `release` (Dreamy builds and deploys it). `providers` and `app_data` stay off without the `app` declarations they need. |
-| `release` | `build`: the commands Dreamy's isolated builder runs. `setup` installs the toolchain as root; `command` builds the committed source unprivileged and leaves `server` (a static executable) and `static/` (the UI) in `DREAMY_OUTPUT`. `{buildpack}` names this directory. `runtime` is how the server runs: the `api` prefix, the `health` path, the `port`, and the `env` and `tasks` variables as templates over the values Dreamy provides. `static` and `branding` are files written into the UI. For now, `checks` names Dreamy's release tests, which move here next, and `template` names Dreamy's AWS deployment template, which stays in Dreamy as its hosting target. |
+| `release` | `build`: the commands Dreamy's isolated builder runs. `setup` installs the toolchain as root; `command` builds the committed source unprivileged and leaves `server` (a static executable) and `static/` (the UI) in `DREAMY_OUTPUT`. `{buildpack}` names this directory. `runtime` is how the server runs: the `api` prefix, the `health` path, the `port`, and the `env` and `tasks` variables as templates over the values Dreamy provides. `static` and `branding` are files written into the UI. `checks` is the end-to-end test of each deployed stage (`e2e`), its plan (`plan`), and the project file of its scenarios (`config`). `template` names Dreamy's AWS deployment template, which stays in Dreamy as its hosting target. |
 | `prompts` | The worker's `start` (`{guide_url}` marks the guide), `sources` (`{sources}` marks the checkouts) and `rules` lines, and the verifier's lines. |
 
 ## License

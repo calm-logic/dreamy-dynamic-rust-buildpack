@@ -52,7 +52,7 @@ updates**.
 | `max_files` | The most files a revision may hold. |
 | `editable` | `include` and `exclude` rules (a path ending in `/` is a directory, `*` everything), the `summary` agents are told, and the `required` files a checkout must have. |
 | `source_roots`, `ignored` | Top-level directories whose new non-editable files are reported, and build directories never uploaded. |
-| `tests` | The `default` commands (run when the `when` file exists) and the `database_env` naming a throwaway PostgreSQL server; `null` when the tests need none. |
+| `tests` | The `default` commands (run when the `when` file exists), the `database_env` naming a throwaway PostgreSQL server (`null` when the tests need none), and `e2e`: where end-to-end tests of key user flows live, completing Dreamy's own rule that every behavior gets fast code-level tests and every key flow an end-to-end test. |
 | `toolchain` | Environment variables, home directories (read-only and writable) and executables the sandboxed agent needs. |
 | `sources` | The lock file whose libraries are checked out read-only for the agent, and the cache directory. |
 | `refresh` | The workspace action that regenerates platform-owned files, its title, and the file whose pins it reports; `null` when nothing is generated. |

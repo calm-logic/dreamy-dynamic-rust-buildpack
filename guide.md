@@ -394,17 +394,22 @@ each map against the registered models, fields and actions when it migrates
 nothing), creates the role once, and updates it in later releases only while
 nobody has changed it in the admin.
 
-The app provisions a managed **Admin** role granting every operation on every
-resource (including roles, users' roles, dashboards and views) and keeps it in
-step with the registered models; the Dreamy project owners are superusers of
-every deployed environment and hold that role from their first sign-in, so
-they can see and manage everything, edit their own record, create other roles
-and assign them, and save views and dashboards. Never create another role
-named Admin. Make the app's own narrower roles (a clerk, a manager) as role
-records, and grant them in code too when the rule is part of the app's
-design; when users should be able to adjust the rules, keep them in role
-records the owner edits in the admin. Say in the reply which roles exist and
-what each may do.
+Every app starts with a default **Admin** role granting every operation on
+every resource (roles, users' roles, providers, dashboards and views included)
+and every action. It is an ordinary role record: it follows the app's new
+models and actions while untouched, and administrators may narrow, rename or
+delete it like any other. Ship `registry.role("Admin", json!({...}))` only to
+give Admin a different map. Apart from Admin a new app has no roles: decide
+which roles the app needs from what its people do (a clerk, a manager, an
+approver, ...), ship each with `registry.role`, and grant them in code too when
+the rule is part of the app's design; when users should be able to adjust the
+rules, keep them in role records the owner edits in the admin. Administrators
+can rename roles, so prefer grants and role maps to checking a role's name in
+code. The Dreamy project owners are superusers of every deployed environment:
+their access — and Dreamy's when it changes the app's data for them — never
+depends on roles, since they pass every grant, row filter, action rule and
+field rule, and they are given the Admin role on first sign-in when it exists.
+Say in the reply which roles exist and what each may do.
 
 **Config** holds application options and the blueprint's buildpack choices.
 Keep credentials in integrations (Providers), never in config files, models or code. The

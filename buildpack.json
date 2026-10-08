@@ -167,7 +167,10 @@
     "release": true
   },
   "release": {
-    "builder": "tools/build_project.py",
+    "build": {
+      "setup": ["python3", "{buildpack}/release/build.py", "setup"],
+      "command": ["python3", "{buildpack}/release/build.py", "build"]
+    },
     "template": "infra/generated-app.yaml",
     "checks": [
       "tests/generated-app.cjs",

@@ -41,6 +41,7 @@ updates**.
 | `project/` | Templates for the files Dreamy generates around a project's own layers: README, Rust entry points, CI, and the admin UI's preparation script and configuration. |
 | `scaffold/` | Templates the `scaffold` section renders: the backend crate, the frontend README, `.gitignore` and the buildpack refresh tool. |
 | `app/provider.rs.j2` | The `registry.integration(...)` code a dynamic-rust app registers a workspace provider with. |
+| `release/build.py` | The release build: `setup` installs musl, Rust and yarn; `build` runs the project's tests, compiles the static `app` binary and builds the admin UI. |
 
 ## Manifest
 
@@ -65,7 +66,7 @@ updates**.
 | `app_data` | The skill for reading and changing the deployed app's data, and the API path prefix it allows. |
 | `app` | How Dreamy talks to a deployed app. `session`: the path where the app exchanges Dreamy's signed operator grant for a session, and the cookie that carries it. `providers`: the app's providers API that Dreamy writes workspace providers through (`list` and the `items` key holding its records; `record`, `connect` and `disconnect`, where `{id}` names a record), and `code`, the template for the registration an app's code makes for a provider. |
 | `capabilities` | `providers` (workspace providers are written into its apps), `app_data`, and `release` (Dreamy builds and deploys it). `providers` and `app_data` stay off without the `app` declarations they need. |
-| `release` | The builder, deployment template and release checks. For now these name Dreamy's built-in dynamic-rust pipeline; they are moving into this repository. |
+| `release` | `build`: the commands Dreamy's isolated builder runs. `setup` installs the toolchain as root; `command` builds the committed source unprivileged and leaves `server` (a static executable) and `static/` (the UI) in `DREAMY_OUTPUT`. `{buildpack}` names this directory. For now, `checks` names Dreamy's release tests, which move here next, and `template` names Dreamy's AWS deployment template, which stays in Dreamy as its hosting target. |
 | `prompts` | The worker's `start` (`{guide_url}` marks the guide), `sources` (`{sources}` marks the checkouts) and `rules` lines, and the verifier's lines. |
 
 ## License

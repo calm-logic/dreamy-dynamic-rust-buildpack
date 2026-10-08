@@ -171,6 +171,39 @@
       "setup": ["python3", "{buildpack}/release/build.py", "setup"],
       "command": ["python3", "{buildpack}/release/build.py", "build"]
     },
+    "runtime": {
+      "api": "/api/",
+      "health": "/api/health",
+      "port": 8080,
+      "env": {
+        "APP_NAME": "{{ app.name }}",
+        "APP_ORIGIN": "{{ app.origin }}",
+        "APP_PREVIEW_ORIGINS": "{{ app.preview_origins }}",
+        "APP_SUPERUSER_EMAILS": "{{ app.superusers }}",
+        "APP_OPERATOR_SECRET": "{{ app.operator_secret }}",
+        "APP_REVISION": "{{ app.revision }}",
+        "APP_STAGE": "{{ app.stage }}",
+        "APP_MAIL_FROM": "{{ mail.from }}",
+        "APP_MAIL_API_KEY": "{{ mail.api_key }}",
+        "APP_MAIL_REGION": "{{ mail.region }}",
+        "APP_BRANDING": "{{ app.branding }}",
+        "APP_AUTH_URL": "{{ auth.url }}",
+        "APP_AUTH_CLIENT_ID": "{{ auth.client_id }}",
+        "APP_AUTH_CLIENT_SECRET": "{{ auth.client_secret }}",
+        "DATABASE_URL": "{{ database.url }}",
+        "BIND_ADDRESS": "0.0.0.0:{{ port }}"
+      },
+      "tasks": {
+        "APP_RUNTIME_MODE": "tasks"
+      }
+    },
+    "static": [
+      {"path": "app-config.js", "template": "release/app-config.js", "type": "application/javascript"}
+    ],
+    "branding": [
+      {"path": "branding.json", "template": "release/branding.json", "type": "application/json"},
+      {"path": "branding.js", "template": "release/branding.js", "type": "application/javascript"}
+    ],
     "template": "infra/generated-app.yaml",
     "checks": [
       "tests/generated-app.cjs",

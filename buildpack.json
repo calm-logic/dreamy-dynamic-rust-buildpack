@@ -6,8 +6,22 @@
   "lock": "foundation.lock.json",
   "guide": "guide.md",
   "skill": "skill.md",
-  "layers": ["models", "hooks", "tasks", "roles", "config"],
-  "core_models": ["User", "Identity", "IdentityVerification", "Role", "Dashboard", "View", "Provider"],
+  "layers": [
+    "models",
+    "hooks",
+    "tasks",
+    "roles",
+    "config"
+  ],
+  "core_models": [
+    "User",
+    "Identity",
+    "IdentityVerification",
+    "Role",
+    "Dashboard",
+    "View",
+    "Provider"
+  ],
   "blueprint": {
     "models": [],
     "hooks": [],
@@ -21,7 +35,10 @@
       "database": "postgres",
       "database_strategy": "shared_instance_logical_database",
       "compute": "lambda",
-      "environments": ["dev", "production"]
+      "environments": [
+        "dev",
+        "production"
+      ]
     }
   },
   "max_files": 100,
@@ -36,28 +53,80 @@
       "frontend/overrides/",
       "config/"
     ],
-    "exclude": ["config/environments.json"],
+    "exclude": [
+      "config/environments.json"
+    ],
     "summary": "backend/project.json, backend/src/models/, backend/src/hooks/, backend/src/tasks/, backend/src/roles/, backend/tests/, frontend/overrides/, and config/ (except config/environments.json)",
-    "required": ["backend/project.json"]
+    "required": [
+      "backend/project.json"
+    ]
   },
-  "source_roots": ["backend", "frontend", "config"],
-  "ignored": ["target", "node_modules", "dist", ".work", ".foundation"],
+  "source_roots": [
+    "backend",
+    "frontend",
+    "config"
+  ],
+  "ignored": [
+    "target",
+    "node_modules",
+    "dist",
+    ".work",
+    ".foundation"
+  ],
   "tests": {
-    "default": ["cargo test --manifest-path backend/Cargo.toml -- --include-ignored"],
+    "default": [
+      "cargo test --manifest-path backend/Cargo.toml -- --include-ignored"
+    ],
     "when": "backend/Cargo.toml",
     "database_env": "DREAM_TEST_DATABASE_URL"
   },
   "toolchain": {
-    "env": ["CARGO_HOME", "RUSTUP_HOME", "CARGO_TARGET_DIR", "RUST_BACKTRACE"],
-    "readonly_home": [".rustup"],
-    "writable": [{"env": "CARGO_HOME", "home": ".cargo"}],
-    "executables": ["cargo"]
+    "env": [
+      "CARGO_HOME",
+      "RUSTUP_HOME",
+      "CARGO_TARGET_DIR",
+      "RUST_BACKTRACE"
+    ],
+    "readonly_home": [
+      ".rustup"
+    ],
+    "writable": [
+      {
+        "env": "CARGO_HOME",
+        "home": ".cargo"
+      }
+    ],
+    "executables": [
+      "cargo"
+    ]
   },
-  "sources": {"lock_file": "foundation.lock.json", "cache": ".foundation"},
-  "refresh": {"action": "upgrade_foundation", "title": "Update buildpack files", "pins": "foundation.lock.json"},
+  "sources": {
+    "lock_file": "foundation.lock.json",
+    "cache": ".foundation"
+  },
+  "refresh": {
+    "action": "refresh",
+    "title": "Update buildpack files",
+    "pins": "foundation.lock.json"
+  },
   "review": {
-    "paths": ["backend/src/roles/", "backend/src/hooks/", "backend/src/tasks/", "backend/project.json", "config/e2e.json"],
-    "code": ["\\.grant\\(", "\\.scoped\\(", "\\bmigration\\(", "\\bschedule\\(", "Integration::", "\"authenticated\"", "\"\\*\"", "superuser"]
+    "paths": [
+      "backend/src/roles/",
+      "backend/src/hooks/",
+      "backend/src/tasks/",
+      "backend/project.json",
+      "config/e2e.json"
+    ],
+    "code": [
+      "\\.grant\\(",
+      "\\.scoped\\(",
+      "\\bmigration\\(",
+      "\\bschedule\\(",
+      "Integration::",
+      "\"authenticated\"",
+      "\"\\*\"",
+      "superuser"
+    ]
   },
   "reference": {
     "library": "dynamic-rust",
@@ -73,12 +142,23 @@
       "src/query.rs"
     ]
   },
-  "app_data": {"skill": "app-data.md", "prefix": "/api/admin/"},
-  "capabilities": {"providers": true, "app_data": true, "release": true},
+  "app_data": {
+    "skill": "app-data.md",
+    "prefix": "/api/admin/"
+  },
+  "capabilities": {
+    "providers": true,
+    "app_data": true,
+    "release": true
+  },
   "release": {
     "builder": "tools/build_project.py",
     "template": "infra/generated-app.yaml",
-    "checks": ["tests/generated-app.cjs", "tests/app-scenarios.cjs", "tests/app-tests.cjs"]
+    "checks": [
+      "tests/generated-app.cjs",
+      "tests/app-scenarios.cjs",
+      "tests/app-tests.cjs"
+    ]
   },
   "prompts": {
     "worker": {
@@ -94,5 +174,194 @@
       "Also check access: grants should name the app's own roles and not open models to \"authenticated\" or \"*\" unless the request asked for that; project owners are superusers regardless.",
       "Outside services must be registered integrations (providers) with no credentials in code, config or tests, and a workspace provider must be registered with the code the workspace gives; a reply that asks the user how a service signs in or for its credentials, instead of building the provider, is not acceptable."
     ]
+  },
+  "scaffold": {
+    "blueprint": "backend/project.json",
+    "lock": "foundation.lock.json",
+    "map": {
+      "models/": "backend/src/models/",
+      "hooks/": "backend/src/hooks/",
+      "tasks/": "backend/src/tasks/",
+      "roles/": "backend/src/roles/",
+      "tests/": "backend/tests/"
+    },
+    "vars": [
+      [
+        "package",
+        "'dream-app-' ~ (project.id or 'project')"
+      ],
+      [
+        "crate",
+        "package | replace('-', '_')"
+      ],
+      [
+        "application",
+        "lock.runtime_contract == 1"
+      ]
+    ],
+    "files": [
+      {
+        "path": "foundation.lock.json",
+        "json": "lock",
+        "newline": true
+      },
+      {
+        "path": "tools/foundation.py",
+        "copy": "scaffold/tools/foundation.py"
+      },
+      {
+        "path": "README.md",
+        "copy": "project/README.md"
+      },
+      {
+        "path": ".gitignore",
+        "copy": "scaffold/gitignore"
+      },
+      {
+        "path": ".github/workflows/check.yml",
+        "copy": "project/github-ci.yml"
+      },
+      {
+        "path": "backend/Cargo.toml",
+        "template": "scaffold/backend/Cargo-library.toml",
+        "when": "not application"
+      },
+      {
+        "path": "backend/src/lib.rs",
+        "copy": "scaffold/backend/lib-library.rs",
+        "when": "not application"
+      },
+      {
+        "path": "backend/Cargo.toml",
+        "template": "scaffold/backend/Cargo.toml",
+        "when": "application"
+      },
+      {
+        "path": "backend/src/lib.rs",
+        "copy": "project/app_lib.rs",
+        "when": "application"
+      },
+      {
+        "path": "backend/src/main.rs",
+        "copy": "project/app_main.rs",
+        "replace": {
+          "__PROJECT_CRATE__": "crate"
+        },
+        "when": "application"
+      },
+      {
+        "path": "backend/project.json",
+        "json": "blueprint"
+      },
+      {
+        "path": "frontend/README.md",
+        "copy": "scaffold/frontend/README.md"
+      },
+      {
+        "path": "frontend/scripts/prepare.py",
+        "copy": "project/prepare_frontend.py"
+      },
+      {
+        "path": "frontend/overrides/config.js",
+        "copy": "project/frontend_config.js"
+      },
+      {
+        "path": "config/environments.json",
+        "json": "{\"dev\": {\"url\": project.dev_url, \"database_name\": project.database_name, \"proxy_environment\": \"dev\"}, \"production\": {\"url\": project.production_url, \"database_name\": project.database_name, \"proxy_environment\": \"production\"}}"
+      },
+      {
+        "path": "foundation.json",
+        "json": "{\"api\": \"dynamic-rust\", \"frontend\": \"dynamic-rust-admin\", \"libraries\": lock.libraries, \"brand\": \"dreamy\", \"core_models\": manifest.core_models, \"runtime\": \"dreamy application runtime\", \"source_revision\": revision.id, \"source_digest\": revision.digest}"
+      }
+    ],
+    "indexes": [
+      {
+        "dir": "backend/src/models/",
+        "file": "mod.rs",
+        "suffix": ".rs",
+        "template": "scaffold/backend/mod.rs",
+        "vars": {
+          "layer": "models"
+        }
+      },
+      {
+        "dir": "backend/src/hooks/",
+        "file": "mod.rs",
+        "suffix": ".rs",
+        "template": "scaffold/backend/mod.rs",
+        "vars": {
+          "layer": "hooks"
+        }
+      },
+      {
+        "dir": "backend/src/tasks/",
+        "file": "mod.rs",
+        "suffix": ".rs",
+        "template": "scaffold/backend/mod.rs",
+        "vars": {
+          "layer": "tasks"
+        }
+      },
+      {
+        "dir": "backend/src/roles/",
+        "file": "mod.rs",
+        "suffix": ".rs",
+        "template": "scaffold/backend/mod.rs",
+        "vars": {
+          "layer": "roles"
+        }
+      }
+    ]
+  },
+  "blueprint_rules": {
+    "keys": [
+      "models",
+      "hooks",
+      "tasks",
+      "roles",
+      "config"
+    ],
+    "lists": [
+      "models",
+      "hooks",
+      "tasks",
+      "roles"
+    ],
+    "config": {
+      "brand": [
+        "dreamy",
+        "dream"
+      ],
+      "admin": [
+        "dynamic-rust-admin",
+        "dream-admin"
+      ],
+      "api": [
+        "dynamic-rust"
+      ],
+      "database": [
+        "postgres"
+      ],
+      "compute": [
+        "lambda"
+      ],
+      "environments": [
+        [
+          "dev",
+          "production"
+        ]
+      ]
+    },
+    "reserved": {
+      "models": [
+        "User",
+        "Identity",
+        "IdentityVerification",
+        "Role",
+        "Dashboard",
+        "View",
+        "Provider"
+      ]
+    }
   }
 }

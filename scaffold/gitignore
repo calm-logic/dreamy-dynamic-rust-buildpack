@@ -1,0 +1,9 @@
+.foundation/
+.work/
+target/
+dist/
+node_modules/
+.env
+.env.*
+.dreamy-cache.json
+.dreamy-cache.lock

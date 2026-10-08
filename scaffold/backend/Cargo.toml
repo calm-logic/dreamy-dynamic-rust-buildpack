@@ -1,0 +1,20 @@
+[package]
+name = "{{ package }}"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+
+[[bin]]
+name = "app"
+path = "src/main.rs"
+
+[dependencies]
+dynamic-rust = { git = "{{ lock.libraries["dynamic-rust"].repository }}", rev = "{{ lock.libraries["dynamic-rust"].revision }}", features = ["application"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+axum = "0.8.9"
+lambda_http = "0.17.0"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }

@@ -64,11 +64,25 @@ const safe = message => String(message || '').split('\n').filter(line => !/(cook
       await page.waitForURL(url=>url.origin===input.url && url.pathname==='/api/login/',{timeout:60000});
       await page.getByLabel('Email address',{exact:true}).waitFor();
       await page.screenshot({path:path.join(output,'sign-in.png'),fullPage:true});
+      if(input.inbox===false)return;
       await page.getByLabel('Email address',{exact:true}).fill(input.username);
       await page.getByRole('button',{name:'Continue',exact:true}).click();
       await page.getByText('Check your inbox.',{exact:false}).first().waitFor({timeout:30000});
     });
-    await check('core:email-link',async()=>{
+    if(input.inbox===false){
+      // This host has no release inbox: the link isn't checked, and the owner
+      // signs in with an operator session, as role scenarios do.
+      const now=new Date().toISOString();
+      report({id:'core:email-link',status:'skipped',started_at:now,finished_at:now,error:'This hosting has no release inbox; the release signed in with an operator session instead.'});
+      assert.ok(input.operator_secret,'Signing in without an inbox needs operator sessions, which this platform has not configured');
+      const expires=Math.floor(Date.now()/1000)+120,email=input.username.trim().toLowerCase();
+      const signature=crypto.createHmac('sha256',input.operator_secret).update('operator\n'+email+'\n'+expires).digest('hex');
+      const session=await request('/api/operator/session','POST',{email,expires,signature});
+      assert.equal(session.status,200,'open an operator session for the owner');
+      await page.context().addCookies([{name:'dream_app',value:session.data.token,domain:new URL(input.url).hostname,path:'/api',httpOnly:true,secure:true,sameSite:'Lax'}]);
+      await page.goto(input.url,{waitUntil:'domcontentloaded'});
+      await page.waitForURL(url=>url.origin===input.url && !url.pathname.includes('/api/'),{timeout:60000});
+    } else await check('core:email-link',async()=>{
       console.log('MAGIC_LINK_REQUESTED');
       mail=JSON.parse((await messages.next()).value);
       const link=new URL(mail.magic_link);

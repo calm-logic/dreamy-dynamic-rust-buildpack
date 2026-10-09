@@ -180,7 +180,11 @@ const safe = message => String(message || '').split('\n').filter(line => !/(cook
         assert.equal(roles.status,200,'list roles');
         const held=(roles.data.roles||[]).find(item=>item.name===role);
         assert.ok(held,'Scenario role is missing from the app: '+role);
-        const email=('release-'+input.revision.slice(0,8)+'-'+role.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'@example.com').slice(0,200);
+        // One stable address per role and revision, its local part within the 64
+        // characters addresses allow whatever the role is called (roles per entity
+        // carry an id in their name).
+        const slug=role.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,30).replace(/-$/,'');
+        const email='release-'+input.revision.slice(0,8)+'-'+(slug?slug+'-':'')+crypto.createHash('sha256').update(role).digest('hex').slice(0,8)+'@example.com';
         let person=await request('/api/admin/users/','POST',{email,name:'Release check: '+role,roles:[held.id]});
         if(person.status===400){
           // Left over from an interrupted run: reuse it with only this role.

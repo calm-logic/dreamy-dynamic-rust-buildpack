@@ -1,7 +1,7 @@
 {
   "name": "dynamic-rust",
   "label": "Dynamic Rust",
-  "description": "A Rust application on the shared dynamic-rust framework with the dynamic-rust-admin UI, PostgreSQL, and serverless hosting with development and production environments.",
+  "description": "Business apps: records, workflows, roles and permissions, and the outside services they connect to. API-first on the shared dynamic-rust framework, with the dynamic-rust-admin UI, PostgreSQL, and serverless hosting with development and production environments.",
   "layout": "dynamic-rust",
   "lock": "foundation.lock.json",
   "guide": "guide.md",

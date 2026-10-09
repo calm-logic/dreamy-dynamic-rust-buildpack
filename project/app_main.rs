@@ -10,16 +10,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let app = configured(registry()?)?;
     app.registry.migrate(&app.pool).await?;
     if std::env::var("APP_RUNTIME_MODE").as_deref() == Ok("tasks") {
-        // Deploy this mode only as a separately scheduled IAM-only function. It
-        // starts due tasks for 25 seconds; one may then run for up to 60 more,
-        // inside the function's 90-second timeout.
+        // Deploy this mode only as a separately scheduled service that nothing
+        // else may call. Each POST starts due tasks for 25 seconds; one may then
+        // run for up to 60 more, inside the host's 90-second timeout.
         let routes = axum::Router::new().route("/", axum::routing::post(move || {
             let app = app.clone();
             async move {
                 task_runner::drain(&app, std::time::Duration::from_secs(25)).await.map(|processed| axum::Json(serde_json::json!({"processed":processed})))
             }
         }));
-        lambda_http::run(routes).await?;
+        if std::env::var_os("AWS_LAMBDA_RUNTIME_API").is_some() {
+            lambda_http::run(routes).await?;
+        } else {
+            let listener = tokio::net::TcpListener::bind(std::env::var("BIND_ADDRESS").unwrap_or_else(|_| "127.0.0.1:8092".into())).await?;
+            axum::serve(listener, routes).await?;
+        }
     } else if std::env::var_os("AWS_LAMBDA_RUNTIME_API").is_some() {
         lambda_http::run(router(app)).await?;
     } else {

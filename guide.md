@@ -166,12 +166,12 @@ set (it is in every deployed environment), otherwise through SES in
 only goes out for writes made after the release that queues it is deployed.
 
 **Outside services are providers.** Every service the app talks to —
-QuickBooks, Xero, Uber, Google, Slack, Stripe, SendGrid, Asaak API, any other
+QuickBooks, Xero, Uber, Google, Slack, Stripe, SendGrid, any other
 API — is registered as an integration, which appears in the deployed app as a
 record on its **Providers** page. Never put tokens, keys, client secrets or
 service passwords in models, config, code, tests or the reply, and never ask the
 requester how a service signs in or for its credentials: build the provider, and
-the credentials arrive through it. A request such as "connect to Asaak API",
+the credentials arrive through it. A request such as "connect to our orders API",
 "add a QuickBooks integration" or "sync loans from Uber" is complete without
 anything more from the requester; use what you know of the service's public API.
 
@@ -183,8 +183,8 @@ unchanged (the name must match), and do not hard-code its base URL or token:
 on every deploy Dreamy writes the base URL for that environment into the app's
 provider and, when its `credentials` say "injected by Dreamy", the token or
 client secret too, then connects it. "Entered in each app" means the app's
-administrator pastes their own token (Asaak API takes each person's own) on the
-Providers page and presses Connect. Otherwise an administrator enters
+administrator pastes their own token (some services take each person's own) on
+the Providers page and presses Connect. Otherwise an administrator enters
 everything there. Either way the code only names the service and how it signs in.
 
 Services that issue an API token (key) use `Integration::token`. The token is
@@ -281,7 +281,7 @@ and `.per("user")`) and give the role that may connect its own
 `{"providers": {"list": {"user": "$user.id"}, "read": {"user": "$user.id"},
 "create": {"user": "$user.id"}, "update": {"user": "$user.id"},
 "connect": {"user": "$user.id"}, "disconnect": {"user": "$user.id"}}}`;
-reach it with `ctx.integration_for("asaak_api", user_id)`.
+reach it with `ctx.integration_for("orders_api", user_id)`.
 
 **Keeping records in step.** A model whose records are synced with a service
 declares `.external_id()`: a read-only, unique `external_id` holding each
@@ -294,10 +294,10 @@ creating the record in the service from a task the write enqueued, then
 that already has an `external_id` is updated there instead of created again.
 Record each sync's outcome (status, error, time) on the records it touches.
 
-**Dynamic REST APIs** (Asaak API is one; Dreamy's own API follows the same
-conventions): resources live at `<base>/<version>/<plural>/`, for Asaak API
-`/v0/<plural>/`, and sign in with a token in a header — Asaak API takes
-`Authorization: JWT <token>` (as the workspace provider's code says).
+**Dynamic REST APIs** (Dreamy's own API follows the same conventions):
+resources live at `<base>/<version>/<plural>/`, such as `/v0/<plural>/`, and
+sign in with a token in a header, such as `Authorization: JWT <token>` (the
+workspace provider's code says which).
 - List: `GET /v0/loans/?page=1&per_page=100` answers
   `{"loans": [...], "meta": {"page", "per_page", "total_results", "total_pages"}}`;
   read `meta.total_pages` to page through everything.

@@ -44,6 +44,7 @@
   "max_files": 100,
   "editable": {
     "include": [
+      "README.md",
       "backend/project.json",
       "backend/src/models/",
       "backend/src/hooks/",
@@ -56,7 +57,7 @@
     "exclude": [
       "config/environments.json"
     ],
-    "summary": "backend/project.json, backend/src/models/, backend/src/hooks/, backend/src/tasks/, backend/src/roles/, backend/tests/, frontend/overrides/, and config/ (except config/environments.json)",
+    "summary": "README.md, backend/project.json, backend/src/models/, backend/src/hooks/, backend/src/tasks/, backend/src/roles/, backend/tests/, frontend/overrides/, and config/ (except config/environments.json)",
     "required": [
       "backend/project.json"
     ]
@@ -220,17 +221,19 @@
   },
   "prompts": {
     "worker": {
-      "start": "Read README.md and backend/project.json first. The framework guide is at {guide_url}; read it before adding models, hooks, tasks, or roles.",
+      "start": "Read README.md and backend/project.json first; docs/buildpack.md describes how the repository is laid out and built. The framework guide is at {guide_url}; read it before adding models, hooks, tasks, or roles.",
       "sources": "The framework sources this project pins are checked out read-only at {sources}. Read them there whenever you need to know how the framework or the admin UI behaves; do not fetch them from the network or search elsewhere.",
       "rules": [
         "Give every model field a label and a one-sentence description: .label(\"due_date\", \"Due date\") and .describe(\"due_date\", \"When the loan must be returned.\"). They are the column heading and the help text a user of the deployed app sees, and the only explanation they get, so write them for that person.",
         "Access: roles exist as grants in code and as records in the deployed app's Roles resource (a name and a permissions map per resource and operation); users hold role records by id in their roles field, plus the implicit \"authenticated\". The Dreamy project owners are superusers in every deployed environment. Keep grants locked down to the app's own roles (no \"authenticated\" or \"*\" grants unless asked) and state in the reply which roles exist and what each may do.",
-        "Every outside service (Asaak API, QuickBooks, Uber, Stripe, SendGrid, any API) is a provider: register it as an integration as the framework guide's \"Outside services are providers\" section shows, and never put tokens, keys or client secrets in code, config, tests or the reply. Its credentials are injected by Dreamy or entered by an administrator on the app's Providers page, so never ask how a service signs in or for its credentials; build the integration from what you know of its public API. When companies, entities or people each need their own account with a service, connect it per record as the guide's \"One connection per company, entity or person\" shows. Keep links to Users, Roles and Providers in any navigation you draw."
+        "Every outside service (QuickBooks, Uber, Stripe, SendGrid, any API) is a provider: register it as an integration as the framework guide's \"Outside services are providers\" section shows, and never put tokens, keys or client secrets in code, config, tests or the reply. Its credentials are injected by Dreamy or entered by an administrator on the app's Providers page, so never ask how a service signs in or for its credentials; build the integration from what you know of its public API. When companies, entities or people each need their own account with a service, connect it per record as the guide's \"One connection per company, entity or person\" shows. Keep links to Users, Roles and Providers in any navigation you draw.",
+        "Keep README.md about this app, for the people who use and maintain it: what it does and for whom, its main records and workflows, who may do what, the outside services it connects to, and how to run and test it. Update it in the same change whenever what the app does changes, and when it still carries the starter note, write it now. Leave the framework and Dreamy's workings out of it: docs/buildpack.md covers how the repository is built."
       ]
     },
     "verifier": [
       "Also check access: grants should name the app's own roles and not open models to \"authenticated\" or \"*\" unless the request asked for that; project owners are superusers regardless.",
-      "Outside services must be registered integrations (providers) with no credentials in code, config or tests, and a workspace provider must be registered with the code the workspace gives; a reply that asks the user how a service signs in or for its credentials, instead of building the provider, is not acceptable."
+      "Outside services must be registered integrations (providers) with no credentials in code, config or tests, and a workspace provider must be registered with the code the workspace gives; a reply that asks the user how a service signs in or for its credentials, instead of building the provider, is not acceptable.",
+      "README.md must describe the app as this change leaves it: when the change adds or alters records, workflows, roles or integrations and README.md does not reflect them, or README.md still carries the starter note, ask for it to be updated."
     ]
   },
   "scaffold": {
@@ -269,7 +272,11 @@
       },
       {
         "path": "README.md",
-        "copy": "project/README.md"
+        "template": "project/README.md"
+      },
+      {
+        "path": "docs/buildpack.md",
+        "copy": "project/buildpack.md"
       },
       {
         "path": ".gitignore",

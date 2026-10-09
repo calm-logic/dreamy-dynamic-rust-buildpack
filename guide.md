@@ -102,6 +102,18 @@ so the admin shows names as links rather than ids in lists and on detail pages
 model a reference as a plain `FieldKind::Uuid` field: the admin cannot follow
 or name it.
 
+Keep files — receipts, contracts, photos, signed PDFs — in file fields:
+`.file("scan")`, with a label and description like any field. The admin offers
+an upload area, shows the file's name and size, and downloads it; the runtime
+stores it in the app's bucket where its hosting has one and in the database's
+large objects otherwise, and deletes it when it is replaced or its record is
+deleted. Never keep file contents in a record (base64 text, JSON blobs) or cap
+uploads yourself. Code that makes a file (an export, a generated PDF) stores it
+with `ctx.put_file(name, content_type, bytes).await?` and sets the returned
+value with `ctx.elevated().update(...)`; mark such fields `.readonly(...)` when
+people should only download them. dynamic-rust's APPLICATION.md "Files" has the
+upload API.
+
 A model that is plumbing rather than something people browse can stay out of the
 admin's navigation drawer with `.metadata(json!({"section": ""}))`; it remains
 routable, searchable, and linkable from relations.

@@ -191,6 +191,13 @@
         "APP_AUTH_CLIENT_ID": "{{ auth.client_id }}",
         "APP_AUTH_CLIENT_SECRET": "{{ auth.client_secret }}",
         "DATABASE_URL": "{{ database.url }}",
+        "APP_STORAGE_BUCKET": "{{ storage.bucket }}",
+        "APP_STORAGE_REGION": "{{ storage.region }}",
+        "APP_STORAGE_ENDPOINT": "{{ storage.endpoint }}",
+        "APP_STORAGE_PREFIX": "{{ storage.prefix }}",
+        "APP_STORAGE_PATH_STYLE": "{{ storage.path_style }}",
+        "APP_STORAGE_ACCESS_KEY_ID": "{{ storage.access_key_id }}",
+        "APP_STORAGE_SECRET_ACCESS_KEY": "{{ storage.secret_access_key }}",
         "BIND_ADDRESS": "0.0.0.0:{{ port }}"
       },
       "tasks": {

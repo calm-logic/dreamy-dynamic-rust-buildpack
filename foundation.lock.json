@@ -3,11 +3,11 @@
   "libraries": {
     "dynamic-rust": {
       "repository": "https://github.com/aleontiev/dynamic-rust.git",
-      "revision": "2455bd34dac063dd1bf0ea1ae3e6e8dfbda52880"
+      "revision": "08a0c65a2edbdb540b143c0bb9d99ce1ca2b1f38"
     },
     "dynamic-rust-admin": {
       "repository": "https://github.com/aleontiev/dynamic-rust-admin.git",
-      "revision": "0f7bf832c06de76d585b67d298f9fd8e9af1563c"
+      "revision": "ea34dcccd42975defac8250fa79f320a9dd131c1"
     }
   },
   "runtime_contract": 1

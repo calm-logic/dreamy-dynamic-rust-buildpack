@@ -215,7 +215,7 @@ const safe = message => String(message || '').split('\n').filter(line => !/(cook
         if(event.status==='running'){phase=test.title;report({id:test.id,status:'running',started_at:at,details:event.details});}
         else report({id:test.id,status:event.status,finished_at:at,...(event.error?{error:safe(event.error)}:{}),...(event.details?{details:event.details}:{})});
       };
-      try { await scenarios.run(input.scenarios || {},request,input.url,actAs,observe); }
+      try { await scenarios.run(input.scenarios || {},request,input.url,actAs,observe,{stage:input.stage}); }
       finally {
         for(const context of contexts)await context.close().catch(()=>{});
         for(const id of added)await request('/api/admin/users/'+id+'/','DELETE');

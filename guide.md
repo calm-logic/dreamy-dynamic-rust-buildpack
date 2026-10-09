@@ -516,9 +516,12 @@ the core checks. It is declarative JSON, not a script:
   role — the way to check each role's access in the deployed app: what it may
   list, read and press, and that forbidden requests answer 403. The role must
   exist in the app (ship it with `registry.role`).
-- Any step that writes needs `cleanup` steps; cleanup always runs, even after a
-  failure. The scenarios also run in production when the app is published, so
-  only create records the cleanup removes, and never touch real data.
+- Add `cleanup` steps that remove what the steps create when you can; cleanup
+  always runs, even after a failure. Without cleanup, dev keeps those records,
+  which is fine, and production, where the scenarios run when the app is
+  published, runs only the steps that store nothing (reads, and writes expected
+  to be refused), so publishing never leaves release-check records in the live
+  app. Either way, never touch real data.
 - A failing step fails the release and names the role, method, path and the
   expectation that did not hold.
 - Every step is a test on the project's **Tests** tab, next to the core

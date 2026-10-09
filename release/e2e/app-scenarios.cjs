@@ -34,11 +34,11 @@ function validate(config) {
       if (step.description !== undefined) assert.ok(typeof step.description === 'string' && step.description.trim().length <= 400, 'Scenario descriptions are at most 400 characters');
     }
   }
-  if ((config.steps || []).some(step => ['POST', 'PUT', 'PATCH', 'DELETE'].includes(step.method))) {
-    assert.ok(config.cleanup?.length, 'Write scenarios must include cleanup steps');
-  }
   return config;
 }
+// A step that, as expected, stores something: a write the app should accept.
+// Writes expected to be refused (a role's 403) store nothing.
+const stores = step => ['POST', 'PUT', 'PATCH', 'DELETE'].includes(step.method) && step.status < 300;
 const OUTCOMES = {400: 'is rejected as invalid', 401: 'is refused', 403: 'is refused', 404: 'is not found', 405: 'is not allowed', 409: 'conflicts'};
 const sentence = text => text.charAt(0).toUpperCase() + text.slice(1);
 // A readable title and description for a step that brings none.
@@ -81,7 +81,11 @@ function tests(config) {
 // `actAs(role)` returns a request function signed in as a member holding only
 // that role; steps without `as` run as the owner. `observe(test, event)` hears
 // each step start, pass, fail, or be skipped after an earlier failure.
-async function run(config, request, origin, actAs, observe = async () => {}) {
+//
+// Cleanup is optional: without it, dev keeps what the steps made. In
+// production (`stage`) such a scenario runs only the steps that store nothing,
+// so publishing never leaves release-check records in the live app.
+async function run(config, request, origin, actAs, observe = async () => {}, {stage} = {}) {
   validate(config);
   const saved = Object.create(null);
   const lookup = new Map(tests(config).map(test => [test.entry, test]));
@@ -114,9 +118,27 @@ async function run(config, request, origin, actAs, observe = async () => {}) {
   };
   let failure;
   const steps = config.steps || [];
+  const readOnly = stage === 'production' && !config.cleanup?.length && steps.some(stores);
+  const skip = (entry, reason) => observe(lookup.get(entry), {status: 'skipped', details: {method: entry.method || 'GET', path: entry.path, as: entry.as || null, expected: entry.status, reason}});
   let started = 0;
   try {
-    for (const entry of steps) { started++; await step(entry); }
+    for (const entry of steps) {
+      started++;
+      if (readOnly && stores(entry)) {
+        await skip(entry, 'Not run in production: these scenarios have no cleanup, so their records stay on dev only.');
+        continue;
+      }
+      if (readOnly) {
+        // A step reading what a skipped step would have made has nothing to read.
+        try { substitute(entry, saved); } catch (error) {
+          if (/^Missing scenario result/.test(error.message)) {
+            await skip(entry, 'Not run in production: it reads a record only dev creates.');
+            continue;
+          }
+        }
+      }
+      await step(entry);
+    }
   } catch (error) {
     failure = error;
     for (const entry of steps.slice(started)) await observe(lookup.get(entry), {status: 'skipped'});

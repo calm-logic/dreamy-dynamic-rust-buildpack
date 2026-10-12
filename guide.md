@@ -485,7 +485,10 @@ to manage them.
 
 Every release runs the project's `config/e2e.json` against the deployed app —
 on dev for every release, and on production too when it is published — after
-the core checks. It is declarative JSON, not a script:
+the core checks. Every project keeps at least one step of its own there: Dreamy
+releases nothing without one, and the core checks do not count. Write a step for
+each key flow, and for any flow the person asks to have tested end to end. It is
+declarative JSON, not a script:
 
 ```json
 {

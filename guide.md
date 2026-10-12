@@ -497,7 +497,7 @@ declarative JSON, not a script:
      "status": 201, "save": "supplier"},
     {"path": "/api/admin/suppliers/{{supplier.supplier.id}}/", "status": 200,
      "expect": [{"path": "supplier.name", "value": "Release check supplier"}]},
-    {"as": "Requester", "path": "/api/admin/suppliers/", "status": 200},
+    {"as": "Requester", "path": "/api/admin/suppliers/", "status": 200, "stages": ["dev", "production"]},
     {"as": "Requester", "path": "/api/admin/invoices/", "status": 403},
     {"as": "Requester", "method": "POST", "path": "/api/admin/suppliers/", "body": {"name": "x"}, "status": 403}
   ],
@@ -519,12 +519,18 @@ declarative JSON, not a script:
   role — the way to check each role's access in the deployed app: what it may
   list, read and press, and that forbidden requests answer 403. The role must
   exist in the app (ship it with `registry.role`).
-- Add `cleanup` steps that remove what the steps create when you can; cleanup
-  always runs, even after a failure. Without cleanup, dev keeps those records,
-  which is fine, and production, where the scenarios run when the app is
-  published, runs only the steps that store nothing (reads, and writes expected
-  to be refused), so publishing never leaves release-check records in the live
-  app. Either way, never touch real data.
+- `"stages"` says where a step runs: `["dev"]` for dev only, or
+  `["dev", "production"]` for dev and production. Keep writes to dev
+  (`["dev"]`) unless cleanup undoes them, and give production the steps that
+  only read or expect a refusal.
+- A step without `stages` runs on dev, and on production unless it stores
+  something no cleanup undoes. Add `cleanup` steps that remove what the steps
+  create when you can; cleanup always runs, even after a failure. Without
+  cleanup, dev keeps those records, which is fine, and production, where the
+  scenarios run when the app is published, runs only the steps that store
+  nothing (reads, and writes expected to be refused), so publishing never
+  leaves release-check records in the live app. Either way, never touch real
+  data.
 - A failing step fails the release and names the role, method, path and the
   expectation that did not hold.
 - Every step is a test on the project's **Tests** tab, next to the core

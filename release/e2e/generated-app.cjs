@@ -2,8 +2,9 @@
 // Each check is reported as it starts and finishes (`TEST {...}` lines on
 // stdout, after the `TESTS [...]` plan), with what the browser showed for the
 // checks that drive it, for the project's Tests tab: the stretch of one video of
-// the whole run that shows the check, or a screenshot where it ended, as the
-// project chose (`capture`: video or screenshot, at low, medium or high quality).
+// the whole run that shows the check, selected frames of the check played as an
+// animated PNG, or a screenshot where it ended, as the project chose (`capture`:
+// video, frames or screenshot, at low, medium or high quality).
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -30,9 +31,14 @@ const safe = message => String(message || '').split('\n').filter(line => !/(cook
   const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH || chromium.executablePath(),args:['--no-sandbox']});
   let phase='open app';
   const capture=input.capture||{mode:'video',quality:'medium'};
-  const video=capture.mode!=='screenshot';
-  // Quality shrinks the video's frame, and turns screenshots below high into JPEGs.
-  const quality={low:{scale:0.5,shot:{type:'jpeg',quality:45}},medium:{scale:0.75,shot:{type:'jpeg',quality:75}},high:{scale:1,shot:{type:'png'}}}[capture.quality]||{scale:0.75,shot:{type:'jpeg',quality:75}};
+  const video=!['screenshot','frames'].includes(capture.mode);
+  // Quality shrinks the video's frame, sets how many frames are kept and how
+  // often, and turns screenshots below high into JPEGs.
+  const quality={low:{scale:0.5,shot:{type:'jpeg',quality:45},frames:{interval:900,limit:6,budget:700_000}},
+    medium:{scale:0.75,shot:{type:'jpeg',quality:75},frames:{interval:450,limit:14,budget:1_400_000}},
+    high:{scale:1,shot:{type:'png'},frames:{interval:300,limit:30,budget:1_900_000}}}[capture.quality]
+    ||{scale:0.75,shot:{type:'jpeg',quality:75},frames:{interval:450,limit:14,budget:1_400_000}};
+  const framing=capture.mode==='frames';
   const viewport={width:1440,height:1000};
   const page=await browser.newPage({viewport,...(video?{recordVideo:{dir:path.join(output,'recording'),size:{width:Math.round(viewport.width*quality.scale),height:Math.round(viewport.height*quality.scale)}}}:{})});
   const began=Date.now();
@@ -52,13 +58,23 @@ const safe = message => String(message || '').split('\n').filter(line => !/(cook
     try{await page.screenshot({path:path.join(output,file),animations:'disabled',caret:'hide',...quality.shot});}catch{return null;}
     return {type:quality.shot.type==='png'?'image/png':'image/jpeg',file};
   };
+  // A check's frames as an animated PNG, or its last frame alone.
+  const film=async (id,recording)=>{
+    const media=await recording.stop().catch(()=>null);
+    if(!media)return null;
+    const file='test-'+id.replace(/[^a-z0-9-]+/gi,'_')+'.png';
+    fs.writeFileSync(path.join(output,file),media.data);
+    return {type:media.type,file};
+  };
   const check=async (id,run)=>{
     phase=titles.get(id) || id;
     const started_at=new Date().toISOString();
     const from=(Date.now()-began)/1000;
     report({id,status:'running',started_at});
+    const recording=recorded.has(id)&&framing?tests.recorder(page,quality.frames):null;
     const finish=async event=>{
-      if(recorded.has(id)&&video)stretches.push({...event,media:{type:'video/webm',file:'session-run.webm',start:from,end:(Date.now()-began)/1000}});
+      if(recording)event.media=await film(id,recording);
+      else if(recorded.has(id)&&video)stretches.push({...event,media:{type:'video/webm',file:'session-run.webm',start:from,end:(Date.now()-began)/1000}});
       else if(recorded.has(id))event.media=await shot(id);
       report(event);
     };

@@ -1,7 +1,9 @@
 // Trusted deployed-app browser gate. Synthetic account details arrive on stdin.
 // Each check is reported as it starts and finishes (`TEST {...}` lines on
-// stdout, after the `TESTS [...]` plan), with an animated recording of the
-// browser for the checks that drive it, for the project's Tests tab.
+// stdout, after the `TESTS [...]` plan), with what the browser showed for the
+// checks that drive it, for the project's Tests tab: the stretch of one video of
+// the whole run that shows the check, or a screenshot where it ended, as the
+// project chose (`capture`: video or screenshot, at low, medium or high quality).
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -27,7 +29,15 @@ const safe = message => String(message || '').split('\n').filter(line => !/(cook
   console.log('TESTS '+JSON.stringify(planned));
   const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH || chromium.executablePath(),args:['--no-sandbox']});
   let phase='open app';
-  const page=await browser.newPage({viewport:{width:1440,height:1000}});
+  const capture=input.capture||{mode:'video',quality:'medium'};
+  const video=capture.mode!=='screenshot';
+  // Quality shrinks the video's frame, and turns screenshots below high into JPEGs.
+  const quality={low:{scale:0.5,shot:{type:'jpeg',quality:45}},medium:{scale:0.75,shot:{type:'jpeg',quality:75}},high:{scale:1,shot:{type:'png'}}}[capture.quality]||{scale:0.75,shot:{type:'jpeg',quality:75}};
+  const viewport={width:1440,height:1000};
+  const page=await browser.newPage({viewport,...(video?{recordVideo:{dir:path.join(output,'recording'),size:{width:Math.round(viewport.width*quality.scale),height:Math.round(viewport.height*quality.scale)}}}:{})});
+  const began=Date.now();
+  // The checks the video shows, reported again with their stretch once it is saved.
+  const stretches=[];
   // Use the browser's network/session context, like the app itself. Separate
   // Node request contexts can use a different DNS resolver on the release host.
   const request=async (pathname,method='GET',body)=>page.evaluate(async({pathname,method,body})=>{
@@ -36,26 +46,37 @@ const safe = message => String(message || '').split('\n').filter(line => !/(cook
     return {status:response.status,data};
   },{pathname,method,body});
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
-  // One check of the plan: reported as running, then passed or failed with its recording.
-  const keep=async (id,recording)=>{
-    if(!recording)return null;
-    const media=await recording.stop();
-    if(!media)return null;
-    const file='test-'+id.replace(/[^a-z0-9-]+/gi,'_')+'.png';
-    fs.writeFileSync(path.join(output,file),media.data);
-    return {type:media.type,file};
+  // One check of the plan: reported as running, then passed or failed with what it showed.
+  const shot=async id=>{
+    const file='test-'+id.replace(/[^a-z0-9-]+/gi,'_')+(quality.shot.type==='png'?'.png':'.jpg');
+    try{await page.screenshot({path:path.join(output,file),animations:'disabled',caret:'hide',...quality.shot});}catch{return null;}
+    return {type:quality.shot.type==='png'?'image/png':'image/jpeg',file};
   };
   const check=async (id,run)=>{
     phase=titles.get(id) || id;
     const started_at=new Date().toISOString();
+    const from=(Date.now()-began)/1000;
     report({id,status:'running',started_at});
-    const recording=recorded.has(id)?tests.recorder(page):null;
+    const finish=async event=>{
+      if(recorded.has(id)&&video)stretches.push({...event,media:{type:'video/webm',file:'session-run.webm',start:from,end:(Date.now()-began)/1000}});
+      else if(recorded.has(id))event.media=await shot(id);
+      report(event);
+    };
     try { await run(); }
     catch(error) {
-      report({id,status:'failed',started_at,finished_at:new Date().toISOString(),error:safe(error.message),media:await keep(id,recording)});
+      await finish({id,status:'failed',started_at,finished_at:new Date().toISOString(),error:safe(error.message)});
       throw error;
     }
-    report({id,status:'passed',started_at,finished_at:new Date().toISOString(),media:await keep(id,recording)});
+    await finish({id,status:'passed',started_at,finished_at:new Date().toISOString()});
+  };
+  // The run's video, once the page closes; each check it shows gets its stretch.
+  const saveVideo=async()=>{
+    if(!video||!stretches.length)return;
+    const recording=page.video();
+    await page.close();
+    await recording.saveAs(path.join(output,'session-run.webm'));
+    await recording.delete().catch(()=>{});
+    for(const event of stretches)report(event);
   };
   try {
     let mail;
@@ -268,5 +289,8 @@ const safe = message => String(message || '').split('\n').filter(line => !/(cook
     for(const test of planned) if(!reported.has(test.id)) report({id:test.id,status:'skipped'});
     fs.writeFileSync(path.join(output,'result.json'),JSON.stringify({passed:false,phase,error:safe(error.message),errors},null,2));
     throw new Error('Generated app E2E failed during '+phase);
-  } finally {lines.close();await browser.close();}
+  } finally {
+    await saveVideo().catch(error=>console.error('The run\'s video was not kept: '+safe(error.message)));
+    lines.close();await browser.close();
+  }
 })().catch(error=>{console.error(error.message);process.exit(1)});

@@ -165,27 +165,53 @@ set (it is in every deployed environment), otherwise through SES in
 `APP_MAIL_REGION`. Never read or log the key elsewhere. An email
 only goes out for writes made after the release that queues it is deployed.
 
-**Outside services are providers.** Every service the app talks to —
-QuickBooks, Xero, Uber, Google, Slack, Stripe, SendGrid, any other
-API — is registered as an integration, which appears in the deployed app as a
-record on its **Providers** page. Never put tokens, keys, client secrets or
-service passwords in models, config, code, tests or the reply, and never ask the
-requester how a service signs in or for its credentials: build the provider, and
-the credentials arrive through it. A request such as "connect to our orders API",
-"add a QuickBooks integration" or "sync loans from Uber" is complete without
+**Outside services are workspace integrations.** Every service the app talks
+to — an internal API, Google, Notion, QuickBooks, Slack, any other — is
+registered with `registry.integration` and used through `ctx.integration`.
+Never put tokens, keys, client secrets or service passwords in models, config,
+code, tests or the reply, and never ask the requester how a service signs in, for
+its credentials, or to create an OAuth client, a service account, a key or a
+developer app: the credentials never pass through the code. A request such as
+"connect to our orders API" or "sync loans from Uber" is complete without
 anything more from the requester; use what you know of the service's public API.
 
-Credentials reach a provider one of two ways. The workspace may have set the
-service up for every app: the claim's `workspace_providers` lists each such
-integration with its name, environments and the exact `code` to register it.
-When the request needs one of these services, register it with that code,
-unchanged (the name must match), and do not hard-code its base URL or token:
-on every deploy Dreamy writes the base URL for that environment into the app's
-provider and, when its `credentials` say "injected by Dreamy", the token or
-client secret too, then connects it. "Entered in each app" means the app's
-administrator pastes their own token (some services take each person's own) on
-the Providers page and presses Connect. Otherwise an administrator enters
-everything there. Either way the code only names the service and how it signs in.
+The workspace connects services once for every app: the claim's
+`workspace_providers` lists each with its name, environments and the exact
+`code` to register it. When the request needs one, register it with that code,
+unchanged (the name must match), and never hard-code its base URL or token. On
+every deploy Dreamy gives the app where the service is for that environment and
+how to sign in, and connects it. Some are connected through Dreamy itself, each
+app with credentials of its own:
+
+- **Google Sheets, Docs and Drive** (`google_drive`): each app environment has
+  its own Google address: the `address` of the integration's environment in the
+  claim once the app has deployed there (it shows on the app's Providers page
+  too), and in code `connection.account["client_email"]`. Dreamy connects it on
+  deploy. The app reads and edits only files people share with that address,
+  as they would with a colleague, so tell the requester which address to share
+  the sheet, document or folder with (production's for real data, dev's for a
+  test copy), and ask for the file's link rather than its ID. The address owns
+  no Drive storage: edit files people made and shared, or work in a shared
+  drive, rather than creating files of its own.
+- **Notion** (`notion`): someone presses **Connect** on the app's **Providers**
+  page and picks the pages and databases the app may use in Notion's own
+  picker. Tell the requester exactly that once the app is deployed; the app
+  sees nothing else. Send a `Notion-Version` header with every request.
+
+**A service the workspace has not connected.** When the request needs a
+service the claim's `workspace_providers` does not list, build what does not
+depend on it and say in the reply that a workspace administrator needs to
+connect the service, and where: the claim's `available_integrations` names what
+they can connect and how (for example Settings → Integrations → Add → Notion).
+A follow-up request then registers it with the code the claim gives.
+
+**Optional: credentials the app keeps itself.** Only when the requester
+explicitly asks for it, or the service needs one account per company or person
+(below), the app holds the credentials itself. Each registered integration is a
+record on the deployed app's **Providers** page, where an administrator enters
+the token, or the OAuth client ID and secret, and presses Connect after the app
+is live. The code is the same either way: it only names the service and how it
+signs in.
 
 Services that issue an API token (key) use `Integration::token`. The token is
 sent as `Authorization: Bearer <token>` unless `.token_header` says otherwise;

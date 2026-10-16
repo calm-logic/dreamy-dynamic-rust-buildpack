@@ -323,7 +323,11 @@ Record each sync's outcome (status, error, time) on the records it touches.
 **Dynamic REST APIs** (Dreamy's own API follows the same conventions):
 resources live at `<base>/<version>/<plural>/`, such as `/v0/<plural>/`, and
 sign in with a token in a header, such as `Authorization: JWT <token>` (the
-workspace provider's code says which).
+workspace provider's code says which). When the claim says the app signs in as
+a user of its own (`dreamy-...`), it may do what that user's roles in the API
+allow: when a call the app needs is refused (401 or 403), say in the reply
+that an administrator of the API gives that user the role it needs, naming the
+user and what the app reads or writes.
 - List: `GET /v0/loans/?page=1&per_page=100` answers
   `{"loans": [...], "meta": {"page", "per_page", "total_results", "total_pages"}}`;
   read `meta.total_pages` to page through everything.

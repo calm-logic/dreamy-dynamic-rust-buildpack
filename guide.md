@@ -549,10 +549,13 @@ declarative JSON, not a script:
   role — the way to check each role's access in the deployed app: what it may
   list, read and press, and that forbidden requests answer 403. The role must
   exist in the app (ship it with `registry.role`).
-- `"stages"` says where a step runs: `["dev"]` for dev only, or
-  `["dev", "production"]` for dev and production. Keep writes to dev
-  (`["dev"]`) unless cleanup undoes them, and give production the steps that
-  only read or expect a refusal.
+- `"stages"` says where a step runs: `["dev"]` for dev only,
+  `["dev", "production"]` for both, or `["production"]` for what holds only
+  in production, such as which outside service it uses (pair it with a
+  `["dev"]` step expecting dev's). Keep writes to dev (`["dev"]`) unless
+  cleanup undoes them, and give production the steps that only read or expect
+  a refusal. A step reading what a step skipped on that stage would have saved
+  is skipped too.
 - A step without `stages` runs on dev, and on production unless it stores
   something no cleanup undoes. Add `cleanup` steps that remove what the steps
   create when you can; cleanup always runs, even after a failure. Without

@@ -32,8 +32,8 @@ function validate(config) {
       // What the project's Tests tab calls the step; derived from it when absent.
       if (step.title !== undefined) assert.ok(typeof step.title === 'string' && /^[^\n]{1,120}$/.test(step.title.trim()), 'Scenario titles are 1-120 characters on one line');
       if (step.description !== undefined) assert.ok(typeof step.description === 'string' && step.description.trim().length <= 400, 'Scenario descriptions are at most 400 characters');
-      // Where the step runs: on dev only, or on dev and production.
-      if (step.stages !== undefined) assert.ok(Array.isArray(step.stages) && step.stages.includes('dev') && step.stages.every(name => ['dev', 'production'].includes(name)) && new Set(step.stages).size === step.stages.length, 'Scenario stages are ["dev"] or ["dev", "production"]');
+      // Where the step runs: on dev, on production, or on both.
+      if (step.stages !== undefined) assert.ok(Array.isArray(step.stages) && step.stages.length > 0 && step.stages.every(name => ['dev', 'production'].includes(name)) && new Set(step.stages).size === step.stages.length, 'Scenario stages are ["dev"], ["production"] or ["dev", "production"]');
     }
   }
   return config;
@@ -84,9 +84,10 @@ function tests(config) {
 // that role; steps without `as` run as the owner. `observe(test, event)` hears
 // each step start, pass, fail, or be skipped after an earlier failure.
 //
-// A step's `stages` says where it runs: ["dev"], or ["dev", "production"]. A
-// step that does not say runs on dev and, unless it stores something no cleanup
-// undoes, on production too. Cleanup is optional: without it, dev keeps what the
+// A step's `stages` says where it runs: ["dev"], ["production"] (what holds only
+// there, such as which outside service production uses), or both. A step that
+// does not say runs on dev and, unless it stores something no cleanup undoes, on
+// production too. Cleanup is optional: without it, dev keeps what the
 // steps made, and production (`stage`) runs only the steps that store nothing,
 // so publishing never leaves release-check records in the live app.
 async function run(config, request, origin, actAs, observe = async () => {}, {stage} = {}) {
@@ -124,24 +125,25 @@ async function run(config, request, origin, actAs, observe = async () => {}, {st
   const steps = config.steps || [];
   const production = stage === 'production';
   const unattended = production && !config.cleanup?.length;
-  const devOnly = entry => production && (entry.stages ? !entry.stages.includes('production') : unattended && stores(entry));
+  const notHere = entry => entry.stages ? !entry.stages.includes(production ? 'production' : 'dev') : production && unattended && stores(entry);
   const skip = (entry, reason) => observe(lookup.get(entry), {status: 'skipped', details: {method: entry.method || 'GET', path: entry.path, as: entry.as || null, expected: entry.status, reason}});
-  const why = entry => entry.stages ? 'Runs on dev only, as its stages say.' : 'Not run in production: these scenarios have no cleanup, so their records stay on dev only.';
+  const why = entry => entry.stages ? `Runs on ${production ? 'dev' : 'production'} only, as its stages say.` : 'Not run in production: these scenarios have no cleanup, so their records stay on dev only.';
+  const unsaved = new Set();
   let started = 0;
   try {
     for (const entry of steps) {
       started++;
-      if (devOnly(entry)) {
+      if (notHere(entry)) {
+        if (entry.save) unsaved.add(entry.save);
         await skip(entry, why(entry));
         continue;
       }
-      if (production) {
-        // A step reading what a skipped step would have made has nothing to read.
-        try { substitute(entry, saved); } catch (error) {
-          if (/^Missing scenario result/.test(error.message)) {
-            await skip(entry, 'Not run in production: it reads a record only dev creates.');
-            continue;
-          }
+      // A step reading what a skipped step would have made has nothing to read.
+      try { substitute(entry, saved); } catch (error) {
+        const name = (error.message.match(/^Missing scenario result: ([^.]+)/) || [])[1];
+        if (name && unsaved.has(name)) {
+          await skip(entry, `Not run on ${production ? 'production' : 'dev'}: it reads a record only ${production ? 'dev' : 'production'} creates.`);
+          continue;
         }
       }
       await step(entry);
@@ -152,7 +154,7 @@ async function run(config, request, origin, actAs, observe = async () => {}, {st
   }
   finally {
     for (const entry of config.cleanup || []) {
-      if (devOnly(entry)) {
+      if (notHere(entry)) {
         await skip(entry, why(entry));
         continue;
       }

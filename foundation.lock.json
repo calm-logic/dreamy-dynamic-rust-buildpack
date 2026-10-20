@@ -3,7 +3,7 @@
   "libraries": {
     "dynamic-rust": {
       "repository": "https://github.com/aleontiev/dynamic-rust.git",
-      "revision": "08a0c65a2edbdb540b143c0bb9d99ce1ca2b1f38"
+      "revision": "affbbb076a430dc809ceb44a48db853f4a6bd3f9"
     },
     "dynamic-rust-admin": {
       "repository": "https://github.com/aleontiev/dynamic-rust-admin.git",

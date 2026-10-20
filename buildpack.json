@@ -154,6 +154,7 @@
       "cookie": "dream_app"
     },
     "providers": {
+      "availability": "/api/admin/integration-availability/",
       "list": "/api/admin/providers/?per_page=200",
       "items": "providers",
       "record": "/api/admin/providers/{id}/",

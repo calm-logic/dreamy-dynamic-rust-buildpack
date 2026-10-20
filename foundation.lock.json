@@ -7,7 +7,7 @@
     },
     "dynamic-rust-admin": {
       "repository": "https://github.com/aleontiev/dynamic-rust-admin.git",
-      "revision": "ea34dcccd42975defac8250fa79f320a9dd131c1"
+      "revision": "a4c4503ec94ee88246e2a68c7a535ee889581c19"
     }
   },
   "runtime_contract": 1

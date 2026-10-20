@@ -170,7 +170,8 @@
   "release": {
     "build": {
       "setup": ["python3", "{buildpack}/release/build.py", "setup"],
-      "command": ["python3", "{buildpack}/release/build.py", "build"]
+      "command": ["python3", "{buildpack}/release/build.py", "build"],
+      "cache_key": ["backend/Cargo.toml", "backend/Cargo.lock", "foundation.lock.json"]
     },
     "runtime": {
       "api": "/api/",

@@ -228,12 +228,14 @@
         "Give every model field a label and a one-sentence description: .label(\"due_date\", \"Due date\") and .describe(\"due_date\", \"When the loan must be returned.\"). They are the column heading and the help text a user of the deployed app sees, and the only explanation they get, so write them for that person.",
         "Access: roles exist as grants in code and as records in the deployed app's Roles resource (a name and a permissions map per resource and operation); users hold role records by id in their roles field, plus the implicit \"authenticated\". The Dreamy project owners are superusers in every deployed environment. Keep grants locked down to the app's own roles (no \"authenticated\" or \"*\" grants unless asked) and state in the reply which roles exist and what each may do.",
         "Every outside service (an internal API, Google, Notion, QuickBooks, any API) is a workspace integration: register it with the code the claim's workspace_providers gives, as the framework guide's \"Outside services are workspace integrations\" section shows, and never put tokens, keys or client secrets in code, config, tests or the reply. Never ask how a service signs in, for its credentials, or for a developer app; build its calls from what you know of its public API. When the workspace has not connected a service the request needs, build the rest and say in the reply that a workspace administrator needs to connect it, naming where from available_integrations; register it in the app for its administrator to connect on the Providers page only when the requester explicitly asks for that. When companies, entities or people each need their own account with a service, connect it per record as the guide's \"One connection per company, entity or person\" shows. Keep links to Users, Roles and Providers in any navigation you draw.",
+        "Every app has a home page of its own at /, frontend/overrides/home/HomePage.vue, as the framework guide's \"The home page\" section shows: the app's key one-pager, for an admin or internal app a central control hub (the key numbers, what needs attention, quick actions, recent activity) and for a client-facing app an overview of its key components, with rich charts and fluid motion from the buildpack's kit (@/kit). Build it with the app, and change it in the same change whenever the app's records, workflows or roles change.",
         "Keep README.md about this app, for the people who use and maintain it: what it does and for whom, its main records and workflows, who may do what, the outside services it connects to, and how to run and test it. Update it in the same change whenever what the app does changes, and when it still carries the starter note, write it now. Leave the framework and Dreamy's workings out of it: docs/buildpack.md covers how the repository is built."
       ]
     },
     "verifier": [
       "Also check access: grants should name the app's own roles and not open models to \"authenticated\" or \"*\" unless the request asked for that; project owners are superusers regardless.",
       "Outside services must be registered integrations with no credentials in code, config or tests, and a workspace integration must be registered with the code the workspace gives; a reply that asks the user how a service signs in, for its credentials or for a developer app is not acceptable. A service the workspace has not connected should be named in the reply as one a workspace administrator needs to connect, unless the user asked for it to be set up in the app itself.",
+      "The app must have its own home page, frontend/overrides/home/HomePage.vue, showing the app as this change leaves it with charts of its real data: when it is missing, or the change adds or alters records, workflows or roles it should show and does not, ask for it to be built or updated.",
       "README.md must describe the app as this change leaves it: when the change adds or alters records, workflows, roles or integrations and README.md does not reflect them, or README.md still carries the starter note, ask for it to be updated."
     ]
   },
@@ -330,6 +332,30 @@
       {
         "path": "frontend/overrides/config.js",
         "copy": "project/frontend_config.js"
+      },
+      {
+        "path": "frontend/kit/index.js",
+        "copy": "project/kit/index.js"
+      },
+      {
+        "path": "frontend/kit/AppChart.vue",
+        "copy": "project/kit/AppChart.vue"
+      },
+      {
+        "path": "frontend/kit/AnimatedNumber.vue",
+        "copy": "project/kit/AnimatedNumber.vue"
+      },
+      {
+        "path": "frontend/kit/data.js",
+        "copy": "project/kit/data.js"
+      },
+      {
+        "path": "frontend/kit/home.js",
+        "copy": "project/kit/home.js"
+      },
+      {
+        "path": "frontend/kit/kit.css",
+        "copy": "project/kit/kit.css"
       },
       {
         "path": "config/environments.json",

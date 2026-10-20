@@ -16,7 +16,9 @@ backend/
   src/roles/           Project permissions
 frontend/
   scripts/prepare.py   Composes the shared Dreamy Admin with local overrides
+  kit/                 Charts, data loading and motion for the app's own pages
   overrides/          Project UI configuration and optional thin wrappers
+  overrides/home/     The app's home page (HomePage.vue), shown at /
 config/
   environments.json   Separate dev and production configuration
 foundation.json        Shared foundation and immutable Dreamy revision reference

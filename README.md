@@ -38,7 +38,7 @@ updates**.
 | `skill.md` | The buildpack's part of the worker skill for agents that drive the `dreamy` CLI themselves. |
 | `app-data.md` | The skill for reading and changing data in a deployed app; `{command}` is replaced with the task's own command. |
 | `foundation.lock.json` | The `dynamic-rust` and `dynamic-rust-admin` revisions new revisions build on. |
-| `project/` | Templates for the files Dreamy generates around a project's own layers: README, Rust entry points, CI, and the admin UI's preparation script and configuration. |
+| `project/` | Templates for the files Dreamy generates around a project's own layers: README, Rust entry points, CI, the admin UI's preparation script and configuration, and `kit/`, the charts, data loading and motion an app's own pages (its home page first) import as `@/kit`. |
 | `scaffold/` | Templates the `scaffold` section renders: the backend crate, the frontend README, `.gitignore` and the buildpack refresh tool. |
 | `app/provider.rs.j2` | The `registry.integration(...)` code a dynamic-rust app registers a workspace provider with. |
 | `release/app-config.js`, `release/branding.js`, `release/branding.json` | The admin UI's configuration and branding, rendered into the deployed UI. |

@@ -1,0 +1,41 @@
+/* Motion for pages of the app's own: content that eases in, one part after another. */
+.app-fade-enter-active,
+.app-fade-leave-active {
+  transition: opacity 0.22s ease;
+}
+.app-fade-enter-from,
+.app-fade-leave-to {
+  opacity: 0;
+}
+/* class="app-reveal" :style="{ '--i': index }" rises into place, staggered by index. */
+.app-reveal {
+  animation: app-reveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+@keyframes app-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* class="app-lift": a card that rises under the pointer, for things to click. */
+.app-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.app-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-reveal,
+  .app-lift,
+  .app-fade-enter-active,
+  .app-fade-leave-active {
+    animation: none;
+    transition: none;
+  }
+}

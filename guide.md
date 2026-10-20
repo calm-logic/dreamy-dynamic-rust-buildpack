@@ -44,7 +44,9 @@ backend/
   tests/                     Project-specific tests
 frontend/
   scripts/prepare.py         Generated shared-admin composition tool
+  kit/                       Generated charts, data and motion for the app's own pages
   overrides/                Editable UI configuration/components
+  overrides/home/HomePage.vue  The app's home page at /
 config/
   environments.json         Platform-managed dev/prod locations
   limits.json               Example project-owned configuration file
@@ -485,6 +487,128 @@ the executable contract and must agree with it. Register append-only SQL through
 `registry.migration(name, sql)` when the generic record store is insufficient.
 Applied migration names and digests are immutable.
 
+## The home page
+
+The root page (`/`) is what every person sees first after signing in: make it
+the app's key one-pager, and build it as part of every app. Write it in
+`frontend/overrides/home/HomePage.vue` (its parts beside it in
+`frontend/overrides/home/`). The buildpack renders it at `/` inside the shared
+shell — header, drawer, account menu, light/dark switch and workspace branding —
+and keeps the shared dashboards one click away in the header's Home menu
+(`/?dashboard=<id>`); an app without one shows the shared dashboard page there
+instead, which says little about the app. When a change adds or alters records,
+workflows or roles, change the home page with it.
+
+What it holds depends on who the app is for:
+- **An admin or internal app** gets a central control hub: the few numbers that
+  say how things stand (out on loan, spent this month), what needs attention now
+  (overdue, awaiting someone's approval, a failed sync), each linking to the
+  filtered list behind it, quick actions for the most common steps, and recent
+  activity.
+- **A client-facing app** gets an overview of its key components: the person's
+  own records and where each stands, progress toward what they are waiting for,
+  and the next step they can take.
+
+Make it rich and fluid: charts of the app's real data (a trend over time, how
+records split by status or category, progress toward a target), numbers that
+count up, cards that ease in one after another, and data that refreshes in
+place. Lay it out on Quasar's grid (`row q-col-gutter-md`, tiles in
+`col-12 col-sm-6 col-md-3`) so it reads on a phone as well as a desktop, and use
+the theme's colors (`primary`, `secondary`, `negative`, Quasar palette names)
+rather than fixed ones, so it follows the workspace's branding in light and dark.
+Its data comes from the app's API as the person viewing it, so it follows their
+roles: wrap each part a role may not reach in `whenAllowed(...)` and leave the
+part out when it comes back `null`, rather than failing the page.
+
+The buildpack's kit, `frontend/kit/`, has what this takes; import it as `@/kit`.
+The buildpack maintains it: use it, never edit or copy it.
+
+| Import | What it does |
+| --- | --- |
+| `AppChart` | An ApexCharts chart (`area`, `line`, `bar`, `donut`, `radialBar`, `heatmap`, ...) in the workspace's colors, light or dark, animated; a placeholder while `loading`, a note when empty, `sparkline` for a tile, `format` for values, `@select` with the clicked point. |
+| `AnimatedNumber` | A number that counts to its new value. |
+| `useLoad(load, { every })` | Loads when the page opens and again every `every` ms while it is visible: `{ data, loading, error, reload }`. |
+| `count`, `list`, `listAll` | How many records match (the API counts them from one tiny request), a page of them, or all of them (up to 5000). |
+| `overTime`, `countBy`, `sum` | Records per day, week or month, per value of a field, and totals, shaped for `AppChart`. |
+| `listRoute`, `recordRoute` | Where a filtered list or a record opens, for tiles, chart clicks and "View all". |
+| `whenAllowed`, `errorMessage` | A part the person's roles may not reach as `null`; a failure in words. |
+| `app-reveal` (`:style="{ '--i': index }"` staggers), `app-lift`, `app-fade` | Classes and a transition for motion; it all stops on devices set to reduce motion. |
+
+Count with `count`, one request per number, rather than downloading records to
+count them; use `listAll` only for what a chart groups, bounded by a date
+filter. The built-in users and roles filter only by equality, `in`, `icontains`
+and `isnull`. For an equipment loan app:
+
+```vue
+<template>
+  <q-page class="q-pa-md q-pa-lg-lg">
+    <div class="row items-center justify-between q-mb-lg app-reveal">
+      <h1 class="text-h4 text-weight-bold q-my-none">Equipment loans</h1>
+      <q-btn unelevated no-caps color="primary" icon="add" label="Record a loan" :to="listRoute('loans')" />
+    </div>
+    <q-banner v-if="error" rounded class="bg-negative text-white q-mb-md">{{ error }}</q-banner>
+    <div class="row q-col-gutter-md">
+      <div v-for="(tile, i) in tiles" :key="tile.label" class="col-12 col-sm-6 col-md-3">
+        <q-card flat bordered class="app-reveal app-lift cursor-pointer" :style="{ '--i': i }" @click="$router.push(tile.to)">
+          <q-card-section>
+            <div class="text-caption text-uppercase">{{ tile.label }}</div>
+            <div class="text-h4 text-weight-bold"><AnimatedNumber :value="tile.value" /></div>
+            <AppChart v-if="tile.trend" type="area" sparkline :height="48" :series="tile.trend" :loading="loading" />
+          </q-card-section>
+        </q-card>
+      </div>
+      <div class="col-12 col-md-8">
+        <q-card flat bordered class="app-reveal" style="--i: 4">
+          <q-card-section class="text-subtitle1">Loans, last 30 days</q-card-section>
+          <AppChart type="area" :labels="perDay.labels" :series="[{ name: 'Loans', data: perDay.series }]" :loading="loading" />
+        </q-card>
+      </div>
+      <div class="col-12 col-md-4">
+        <q-card flat bordered class="app-reveal" style="--i: 5">
+          <q-card-section class="text-subtitle1">By status</q-card-section>
+          <AppChart type="donut" :labels="byStatus.labels" :series="byStatus.series" :loading="loading"
+            @select="(point) => $router.push(listRoute('loans', { 'status.$eq': point.label }))" />
+        </q-card>
+      </div>
+    </div>
+  </q-page>
+</template>
+
+<script>
+import { computed } from "vue";
+import { AnimatedNumber, AppChart, count, countBy, listAll, listRoute, overTime, useLoad, whenAllowed } from "@/kit";
+
+export default {
+  name: "HomePage",
+  components: { AnimatedNumber, AppChart },
+  setup() {
+    const today = new Date().toISOString().slice(0, 10);
+    const since = new Date(Date.now() - 30 * 86400000).toISOString();
+    const { data, loading, error } = useLoad(async () => {
+      const [out, overdue, recent] = await Promise.all([
+        count("loans", { status: "out" }),
+        whenAllowed(count("loans", { status: "out", "due_date.lt": today })),
+        listAll("loans", { filter: { "created.gte": since } }),
+      ]);
+      return { out, overdue, recent };
+    }, { every: 60000 });
+    const perDay = computed(() => overTime(data.value?.recent, "created", { unit: "day", last: 30 }));
+    const byStatus = computed(() => countBy(data.value?.recent, "status"));
+    const tiles = computed(() => [
+      { label: "Out now", value: data.value?.out, to: listRoute("loans", { "status.$eq": "out" }), trend: perDay.value.series },
+      { label: "Overdue", value: data.value?.overdue, to: listRoute("loans", { "status.$eq": "out", "due_date.$lt": today }) },
+    ].filter((tile) => tile.value !== null));
+    return { loading, error, perDay, byStatus, tiles, listRoute };
+  },
+};
+</script>
+```
+
+Filters in `count`, `list` and `listAll` are the API's (`"due_date.lt"`,
+`"status.in": [...]`, `"-status"` to exclude); those in `listRoute` are the
+admin's (`"status.$eq"`, `"due_date.$lt"`, `"status.$in"`, `"approver.$isnull"`).
+Give the page one root, `<q-page>`, and a multi-word component name.
+
 ## Publishing and deployment checks
 
 Successful completion freezes one revision and queues its repository commit and
@@ -505,11 +629,11 @@ source revision intact and records a visible release failure.
 The core checks sign in, load the landing page, then use the shared shell on the
 Users screen (`/users/`): its account menu, light/dark switch, workspace logo in the
 drawer, and sign-out, and open the Roles (`/roles/`) and Providers (`/providers/`)
-pages. Every app has these three: a frontend override may give the app its own
-landing page or full-page workspace (`router.addRoute(...)` and a `home`
-redirect), but must keep the shared shell routes working and, when it draws its
-own navigation, keep links to Users, Roles and Providers for the people allowed
-to manage them.
+pages. Every app has these three: its home page renders inside that shell, and
+a frontend override may also give the app a full-page workspace of its own
+(`router.addRoute(...)`), but must keep the shared shell routes working and,
+when it draws its own navigation, keep links to Users, Roles and Providers for
+the people allowed to manage them.
 
 ### Release scenarios (`config/e2e.json`)
 

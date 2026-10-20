@@ -22,6 +22,7 @@ Project code supplies business-specific extensions:
 | Roles | Resource, action, and record access rules | `backend/src/roles/` |
 | Config | App options and the five-layer blueprint | `backend/project.json`, `config/` |
 | UI overrides | Thin project-specific configuration/components | `frontend/overrides/` |
+| Home page | The app's key one-pager at `/`: a control hub for an admin app, an overview for a client-facing one, with charts | `frontend/overrides/home/HomePage.vue` |
 
 The blueprint has exactly `models`, `hooks`, `tasks`, `roles`, and `config`.
 Preserve `config.api=dynamic-rust`, `admin=dynamic-rust-admin`, `brand=dreamy`,
@@ -32,6 +33,9 @@ View, or Provider models, or replace shared auth, scaffolding, or CI.
 `foundation.lock.json` pins the official public `aleontiev/dynamic-rust` and
 `aleontiev/dynamic-rust-admin` libraries. Existing `admin=dream-admin` revisions
 remain compatible; preserve their immutable source unless changing the request.
+
+Every app has a home page of its own, built with the buildpack's kit (`@/kit`:
+charts, live data and motion), as the guide's "The home page" section shows.
 
 Read [the framework guide](guide.md) when planning extensions.
 It explains the registered model, hook, action, task, migration, and permission

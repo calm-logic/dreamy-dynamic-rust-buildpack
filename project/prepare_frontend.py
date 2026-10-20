@@ -30,7 +30,12 @@ for field in ['main','module','files']: package.pop(field,None)
 config=DEST/'quasar.conf.js'
 config.write_text(config.read_text().replace('...config.resolve.alias,',f"...config.resolve.alias, 'dynamic-rust-admin': path.resolve(__dirname, '{library_path}'),").replace('extendWebpack(config) {',"extendWebpack(config) { config.resolve.modules = [path.resolve(__dirname,'node_modules'), ...(config.resolve.modules || ['node_modules'])];").replace('open: true,','open: false,'))
 (DEST/'src/router/index.js').write_text('import {route} from "quasar/wrappers";\nimport {createAdminRouter} from "dynamic-rust-admin";\nexport default route(() => createAdminRouter());\n')
+if (FRONTEND/'overrides/home/HomePage.vue').is_file():
+    # The app's own home page is the root page; the shared dashboards stay one click away.
+    (DEST/'src/router/index.js').write_text('import {route} from "quasar/wrappers";\nimport {createAdminRouter, adminRoutes} from "dynamic-rust-admin";\nimport {withHome} from "../kit/home";\nexport default route(() => createAdminRouter(withHome(adminRoutes, () => import("../home/HomePage.vue"))));\n')
 (DEST/'src/store/index.js').write_text('export {adminStore as default} from "dynamic-rust-admin";\n')
+# The buildpack's kit for the app's own pages (charts, live data, motion), imported as "@/kit".
+if (FRONTEND/'kit').is_dir(): shutil.copytree(FRONTEND/'kit',DEST/'src/kit',dirs_exist_ok=True)
 shutil.copytree(FRONTEND/'overrides',DEST/'src',dirs_exist_ok=True)
 if (FRONTEND/'overrides/app.js').is_file():
     # Wire extensions into the actual mounted official admin app.

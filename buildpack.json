@@ -176,6 +176,7 @@
     },
     "runtime": {
       "api": "/api/",
+      "memory_config": "config/runtime.json",
       "health": "/api/health",
       "port": 8080,
       "env": {

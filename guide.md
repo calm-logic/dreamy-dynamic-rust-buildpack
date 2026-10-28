@@ -635,6 +635,20 @@ a frontend override may also give the app a full-page workspace of its own
 when it draws its own navigation, keep links to Users, Roles and Providers for
 the people allowed to manage them.
 
+### Memory (`config/runtime.json`)
+
+The deployed app's request and task functions each get 1024 MB. When a request
+stops with `Runtime.OutOfMemory` in the app's logs, first make the work lighter:
+read only the columns and rows it needs, page through large lists, and move
+long work into a task. When the work truly needs more, ask for it in
+`config/runtime.json`, which the next release applies to both functions:
+
+```json
+{"memory_mb": 2048}
+```
+
+Values run from 512 to 4096; anything outside is held to those bounds.
+
 ### Release scenarios (`config/e2e.json`)
 
 Every release runs the project's `config/e2e.json` against the deployed app —

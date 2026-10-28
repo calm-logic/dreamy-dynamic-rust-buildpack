@@ -51,7 +51,8 @@ const safe = message => String(message || '').split('\n').filter(line => !/(cook
     const text=await response.text();let data;try{data=JSON.parse(text)}catch{data=null}
     return {status:response.status,data};
   },{pathname,method,body});
-  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  // Each page error names the page it happened on and where it was thrown, since the checks only assert them later.
+  const errors=[];page.on('pageerror',error=>errors.push(`${error.message} (on ${new URL(page.url()).pathname}${(error.stack||'').split('\n').slice(1,3).map(line=>' '+line.trim()).join('')})`));
   // One check of the plan: reported as running, then passed or failed with what it showed.
   const shot=async id=>{
     const file='test-'+id.replace(/[^a-z0-9-]+/gi,'_')+(quality.shot.type==='png'?'.png':'.jpg');

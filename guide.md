@@ -195,6 +195,17 @@ app with credentials of its own:
   test copy), and ask for the file's link rather than its ID. The address owns
   no Drive storage: edit files people made and shared, or work in a shared
   drive, rather than creating files of its own.
+- **Google Chat** (`google_chat`): every app acts as the workspace's one Chat
+  app, whose address is the integration's `address` in the claim. Dreamy
+  connects it on deploy. The app reads and posts only in spaces someone added
+  the Chat app to, so tell the requester to add it to the space (the space's
+  name → Apps & integrations → Add apps) and ask for the space's link. Google
+  sends the app nothing for messages that do not mention it: watch a space by
+  polling its messages from a scheduled task, as the integration's `usage`
+  says. Reading needs a Google Workspace administrator's one-time approval,
+  which the workspace's Google Cloud integration walks them through; until
+  then show reads as waiting for it. Never ask for a Chat webhook or an "Other
+  API" for Google Chat.
 - **Notion** (`notion`): someone presses **Connect** on the app's **Providers**
   page and picks the pages and databases the app may use in Notion's own
   picker. Tell the requester exactly that once the app is deployed; the app
